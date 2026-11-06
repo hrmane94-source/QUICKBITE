@@ -1,8 +1,8 @@
 # QuickBite — System Architecture Specification
 
-> **Document Version:** 1.0.0  
-> **Milestone:** 03 — Official Project Documentation  
-> **Status:** Architectural Baseline  
+> **Document Version:** 1.3.0  
+> **Last Updated Milestone:** 08 — Student Mobile App Foundation & Native Android Build  
+> **Status:** Architectural Baseline — Active Development  
 
 ---
 
@@ -86,7 +86,7 @@ QUICKBITE/
 ├── tsconfig.base.json        # Shared baseline TypeScript compiler options
 ├── .editorconfig             # Universal cross-editor formatting specifications
 ├── apps/
-│   ├── student-app/          # [PLANNED] Mobile client for Android & iOS (React Native + Expo)
+│   ├── student-app/          # [ACTIVE — Native Dev Build & Expo Go] Mobile client (React Native 0.88.1 + Expo SDK 58)
 │   └── business-dashboard/   # [PLANNED] Web SPA for canteen operators (React + TypeScript)
 ├── packages/
 │   └── shared/               # [IMPLEMENTED] @quickbite/shared (Zod 4 schemas, enums, & inferred types)
@@ -102,13 +102,13 @@ QUICKBITE/
 
 | Workspace / Directory | Target Technology | Scope & Responsibilities | Dependencies & Architectural Boundaries |
 | :--- | :--- | :--- | :--- |
-| **`apps/student-app`** | React Native, Expo, TypeScript | [PLANNED] Student consumer app: OTP authentication, OCR ID scanning, menu discovery, cart, UPI payments, live digital token tracking. | Consumes `@quickbite/shared`. Never imports dashboard code. Retains Expo's dedicated `tsconfig.json`. |
+| **`apps/student-app`** | React Native 0.88.1, Expo SDK 58, TypeScript | [ACTIVE — Native Dev Build & Expo Go] Student consumer app: OTP authentication, OCR ID scanning, menu discovery, cart, UPI payments, live digital token tracking. Verified via native development build (Expo CNG) on Android Studio emulator and via Expo Go on physical device. Full QuickBite application UI is planned for upcoming milestones. | Consumes `@quickbite/shared`. Never imports dashboard code. Retains Expo's dedicated `tsconfig.json`. |
 | **`apps/business-dashboard`** | React, TypeScript (Vite) | [PLANNED] Kitchen & admin portal: Live Kitchen Display System (KDS), menu availability toggling, sales analytics. | Consumes `@quickbite/shared`. Never imports mobile app code. |
 | **`packages/shared`** | TypeScript + Zod 4 | [IMPLEMENTED] Domain interfaces, order status enums, Zod validation schemas, business constants, currency formatters. | Zero UI or framework dependencies. Extends `tsconfig.base.json`. Consumed directly via npm workspace linking. |
 | **`supabase/`** | PostgreSQL 15+, Deno | [PLANNED] Cloud backend: SQL DDL migrations, Row Level Security (RLS) rules, seed fixtures, and Deno Edge Functions. | Decoupled from the Node.js workspace hierarchy; managed via Supabase CLI and SQL tooling. |
 
 > [!NOTE]
-> *Implementation Status:* The shared package `@quickbite/shared` is implemented and linked via npm workspaces. The application source code for `student-app`, `business-dashboard`, and `supabase/` database migrations remain planned for upcoming milestones.
+> *Implementation Status:* The shared package `@quickbite/shared` is implemented and linked via npm workspaces. The student app (`apps/student-app`) is **ACTIVE** — initialized with Expo SDK 58 and React Native 0.88.1, configured with full native Android build toolchain (SDK 37, JDK 17, CMake 3.31.6, Ninja 1.12.1), passed 20/20 Expo Doctor checks, and verified on the Android Studio emulator. Full QuickBite application UI screens are planned for upcoming milestones. The business dashboard and Supabase migrations remain planned.
 
 ### 2.4. Monorepo Development Workflow
 The root workspace provides unified orchestration scripts executing recursively across available packages using npm's `--workspaces --if-present` flags:
@@ -194,6 +194,114 @@ const validatedOrder: Order = orderSchema.parse(rawPayload);
 It is critical to distinguish application-layer validation from future database-layer enforcement:
 1. **`@quickbite/shared` (Application Layer):** Validates user input before network transmission and verifies API responses at runtime within the client apps. Enforces business formats (regex for Indian phone numbers, character lengths, integer paise currency), and cross-field arithmetic invariants (item total, subtotal sum).
 2. **Supabase / PostgreSQL (Database Layer - Upcoming):** Enforces relational referential integrity (`FOREIGN KEY`), transactional isolation, check constraints (e.g. `CHECK (total_paise >= 0)`), Row Level Security (RLS) policies, and immutable audit triggers. Shared schemas do not replace database constraints; they complement them by catching malformed data at the client perimeter before it reaches the database.
+
+### 2.7. Student Application Architecture (`apps/student-app`)
+
+#### Status
+**ACTIVE — Native Android Development Build & Expo Go.**
+- Native development build installation verified on **Android Studio emulator**.
+- Early JavaScript bundle testing verified on physical Android device via **Expo Go**.
+- *Constraints:* No physical-device native installation claimed; no production APK/AAB readiness claimed (release signing, code shrinking/minification, and Play Store distribution are deferred to Milestone 15).
+
+#### Native Build Toolchain & Environment
+The native Android development build was compiled using Expo Continuous Native Generation (CNG):
+- **Expo CNG Workflow:** `npx expo prebuild` / `expo run:android` generates ephemeral native Android project files that are excluded from version control via `.gitignore`.
+- **Android SDK:** API Level 37 (Target & Compile SDK) with Android Build Tools.
+- **Java Development Kit:** JDK 17 (Eclipse Temurin / OpenJDK 17).
+- **Native Build Tools:** CMake 3.31.6 and Ninja 1.12.1 for C++ compilation and React Native New Architecture worklets.
+- **Windows Path Resolution:** Windows long-path limitation resolved (`core.longpaths = true` and shortened build output paths) to support deeply nested React Native and CMake intermediate artifacts.
+- **Diagnostics & Governance:** Passed 20/20 checks on `npx expo-doctor` with zero errors or warnings.
+
+#### Execution Environment & Distribution Distinction
+| Dimension | Expo Go (Early Testing) | Native Development Build (Milestone 08) | Standalone APK / AAB (Production Milestone 15) |
+| :--- | :--- | :--- | :--- |
+| **Verification Target** | Physical Android device | **Android Studio emulator** | Physical Android devices / Play Store |
+| **Execution Model** | JS bundle in Expo Go app container | Full native compilation via Expo CNG | Standalone optimized native binary |
+| **Package Identifier** | Generic Expo Go host identity | `com.quickbite.student` | `com.quickbite.student` (Play Store verified) |
+| **Native Modules** | Restricted to Expo Go standard set | All native libraries, CMake C++ worklets | All native libraries & custom extensions |
+| **Build Tooling** | Expo Go app (no local compiler needed) | Android SDK 37, JDK 17, CMake 3.31.6, Ninja 1.12.1 | Expo EAS Build / CI release pipeline |
+| **Production Readiness**| ❌ No (development container only) | ❌ No (debug development build only) | ✅ Yes (signed release AAB/APK) |
+
+#### Application Identity
+Configured in `apps/student-app/app.json`:
+
+| Field | Value | Notes |
+| :--- | :--- | :--- |
+| `name` | `QuickBite` | Application display name |
+| `slug` | `quickbite-student` | Expo project slug (URL-safe) |
+| `scheme` | `quickbite` | Deep-linking URI scheme (`quickbite://`) |
+| `orientation` | `portrait` | Portrait-locked for optimal order flow UX |
+| `userInterfaceStyle` | `light` | Light mode enforced — QuickBite brand is light-first |
+| `android.package` | `com.quickbite.student` | **Provisional** — verify uniqueness on Google Play Console before production publishing |
+
+#### Framework & Runtime
+| Attribute | Value |
+| :--- | :--- |
+| **Expo SDK** | 58 (`~58.0.23`) |
+| **React Native** | 0.88.1 |
+| **React** | 19.3.0 |
+| **Navigation** | Expo Router (`~58.0.30`, file-based routing) |
+| **Source root** | `apps/student-app/src/` |
+| **Entry Point** | `main: "expo-router/entry"` in `package.json` |
+| **Shared Domain** | `@quickbite/shared` (`^0.1.0`, npm workspace link) |
+
+#### Directory Structure
+```text
+apps/student-app/
+├── app.json                        # Official application identity (QuickBite, com.quickbite.student)
+├── package.json                    # App-level dependencies (Expo SDK 58, React Native 0.88.1)
+├── tsconfig.json                   # Extends @expo/tsconfig.base (independent from root)
+├── expo-env.d.ts                   # Expo Router typed routes declaration
+├── src/
+│   ├── app/                        # Expo Router file-based screen routes
+│   │   ├── _layout.tsx             # Root navigator: ThemeProvider, AnimatedSplashOverlay, AppTabs
+│   │   ├── index.tsx               # Home tab (Expo starter screen — to be replaced)
+│   │   └── explore.tsx             # Explore tab (Expo starter screen — to be replaced)
+│   ├── components/
+│   │   ├── animated-icon.tsx       # Animated Expo logo icon (starter)
+│   │   ├── app-tabs.tsx            # Tab bar navigator component
+│   │   ├── external-link.tsx       # Pressable external link wrapper
+│   │   ├── hint-row.tsx            # Hint display row (starter)
+│   │   ├── themed-text.tsx         # Theme-aware Text component
+│   │   ├── themed-view.tsx         # Theme-aware View component
+│   │   ├── web-badge.tsx           # Expo web badge (web platform only)
+│   │   └── ui/
+│   │       └── collapsible.tsx     # Reanimated-powered collapsible (starter)
+│   ├── constants/
+│   │   └── theme.ts                # Colour tokens, Spacing, Fonts, BottomTabInset, MaxContentWidth
+│   ├── hooks/
+│   │   ├── use-color-scheme.ts     # Device color scheme hook
+│   │   └── use-theme.ts            # Active theme object hook
+│   └── global.css                  # Global stylesheet (NativeWind/CSS Interop ready)
+├── assets/
+│   ├── images/                     # App icons, splash, tab icons, tutorial images
+│   └── expo.icon/                  # iOS adaptive icon assets
+└── scripts/
+    └── reset-project.js            # Expo new-project reset utility
+```
+
+#### Navigation Architecture
+- **Entry Point:** `expo-router/entry` (defined in `package.json`)
+- **Root Layout** (`src/app/_layout.tsx`): Renders `ThemeProvider` (Expo Router) wrapping `AnimatedSplashOverlay` and the `AppTabs` tab navigator.
+- **Tab Navigator** (`src/components/app-tabs.tsx`): Provides bottom tab navigation between `index` (Home) and `explore` screens.
+- **Screens (current — Expo starter, to be replaced):**
+  - `src/app/index.tsx` — Home screen with Expo animated icon and development hints.
+  - `src/app/explore.tsx` — Expo feature showcase screen.
+
+> [!IMPORTANT]
+> Existing Expo starter screens (`index.tsx`, `explore.tsx`) are **not** production QuickBite screens. They are preserved as the app development baseline. Full QuickBite UI (canteen discovery, menu, cart, order tracking) will replace them in upcoming milestones.
+
+#### Key Dependencies (`apps/student-app`)
+| Package | Version | Purpose |
+| :--- | :--- | :--- |
+| `expo` | ~58.0.23 | Expo SDK platform runtime |
+| `expo-router` | ~58.0.30 | File-based navigation |
+| `expo-splash-screen` | ~58.0.13 | Animated launch screen |
+| `react-native-reanimated` | 4.7.1 | UI-thread 60 FPS animations |
+| `react-native-gesture-handler` | ~3.3.0 | Native gesture system |
+| `@expo/ui` | ~58.0.27 | Expo UI components |
+| `expo-image` | ~58.0.18 | Optimized image rendering |
+| `@quickbite/shared` | ^0.1.0 | Workspace-linked domain schemas |
 
 ---
 

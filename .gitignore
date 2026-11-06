@@ -33,10 +33,18 @@ obj/
 *.dSYM/
 *.bundle
 
-# React Native / Android / iOS
+# React Native / Android / iOS (Expo Continuous Native Generation - CNG)
 .gradle/
+.kotlin/
+.cxx/
 local.properties
 *.keystore
+android/
+ios/
+apps/student-app/android/
+apps/student-app/ios/
+apps/*/android/
+apps/*/ios/
 android/app/build/
 ios/Pods/
 ios/build/

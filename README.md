@@ -1,6 +1,6 @@
 # QuickBite — Smart Canteen Ordering & Queue Management Platform
 
-[![Status](https://img.shields.io/badge/Status-Milestone%2007%20%7C%20Shared%20Package%20Foundation-073B3A.svg)](file:///c:/Users/Harshad/PROJECTS/QUICKBITE/docs/PROJECT_OVERVIEW.md)
+[![Status](https://img.shields.io/badge/Status-Milestone%2008%20%7C%20Student%20Mobile%20App%20Foundation-073B3A.svg)](file:///c:/Users/Harshad/PROJECTS/QUICKBITE/docs/PROJECT_OVERVIEW.md)
 [![Design Philosophy](https://img.shields.io/badge/Design-Premium%20Hybrid-B9F5D0.svg?labelColor=073B3A)](file:///c:/Users/Harshad/PROJECTS/QUICKBITE/docs/DESIGN_SYSTEM.md)
 [![Platform](https://img.shields.io/badge/Platform-React%20Native%20%7C%20Expo%20%7C%20Supabase-FF735C.svg)](file:///c:/Users/Harshad/PROJECTS/QUICKBITE/docs/ARCHITECTURE.md)
 
@@ -71,7 +71,7 @@ QuickBite introduces a synchronized two-sided digital ecosystem:
 
 | Layer | Technology | Rationale |
 | :--- | :--- | :--- |
-| **Student Mobile App** | **React Native + Expo (TypeScript)** | Cross-platform native performance, rapid OTA updates, robust Android ecosystem support. |
+| **Student Mobile App** | **React Native 0.88.1 + Expo SDK 58 (TypeScript)** | Cross-platform native performance, Expo Continuous Native Generation (CNG), rapid iteration, robust Android ecosystem support. |
 | **Business Dashboard** | **React + TypeScript (Vite)** | Responsive web client for canteen tablets, POS terminals, and management laptops. |
 | **Shared Domain Layer** | **@quickbite/shared (TypeScript + Zod 4)** | Source-first shared package for domain validation schemas, DTOs, and inferred TypeScript types. |
 | **Backend & Database** | **Supabase (PostgreSQL 15+)** | Built-in Row Level Security (RLS), real-time WebSockets, robust auth, and Edge Functions. |
@@ -101,7 +101,7 @@ QUICKBITE/
 ├── .github/
 │   └── workflows/            # Monorepo CI/CD pipelines (lint, test, build validation)
 ├── apps/
-│   ├── student-app/          # [PLANNED] React Native / Expo consumer mobile application
+│   ├── student-app/          # [ACTIVE — Native Dev Build & Expo Go] React Native 0.88.1 / Expo SDK 58 mobile app
 │   └── business-dashboard/   # [PLANNED] React + TypeScript web portal for canteen operators
 ├── packages/
 │   └── shared/               # [IMPLEMENTED] @quickbite/shared (Zod 4 schemas & inferred types)
@@ -118,7 +118,7 @@ QUICKBITE/
 ```
 
 ### Workspace Directory Roles
-* **`apps/student-app` (Planned):** Consumer mobile app built with React Native and Expo (TypeScript). Delivers 60 FPS order discovery, UPI checkout, and digital token tracking. Consumes `@quickbite/shared`.
+* **`apps/student-app` (Active — Native Dev Build & Expo Go):** Consumer mobile app built with React Native 0.88.1 and Expo SDK 58 (TypeScript). Integrates with `@quickbite/shared` via npm workspaces. Verified via Expo Go on a physical Android device (early preview) and via native Android development build (Expo Continuous Native Generation) compiled with Android SDK 37, JDK 17, CMake 3.31.6, and Ninja 1.12.1, successfully installed and launched on the Android Studio emulator. Full QuickBite screens to be implemented in subsequent milestones. Consumes `@quickbite/shared`.
 * **`apps/business-dashboard` (Planned):** Canteen operator and kitchen display portal built with React and TypeScript. Consumes `@quickbite/shared`.
 * **`packages/shared` (Implemented):** Framework-agnostic TypeScript package (`@quickbite/shared`) extending `tsconfig.base.json`, housing domain schemas (Common, College, Canteen, Student, MenuItem, Order, Token, Payment) and inferred TypeScript types using Zod 4.
 * **`supabase/` (Planned):** Cloud-native backend maintaining PostgreSQL DDL migrations, Row Level Security (RLS) policies, and Deno Edge Functions, decoupled from frontend Node packaging.
@@ -139,9 +139,9 @@ Root-level npm scripts allow orchestrating common tasks across workspaces using 
 * [x] **Milestone 04: Initial Git Repository Setup & Remote Push** — First repository commit committed and pushed to GitHub.
 * [x] **Milestone 05: Workspace Governance & Review** — Quality audit and structural verification.
 * [x] **Milestone 06: Monorepo Configuration** — npm workspaces setup (`apps/*`, `packages/*`), `tsconfig.base.json`, `.editorconfig`, and root script orchestration.
-* [x] **Milestone 07: Shared Package Foundation** — `@quickbite/shared` implemented with Zod 4 domain schemas, enums, and inferred TypeScript types (Current).
-* [ ] **Milestone 08: Database Modeling & Supabase Migrations** — Schemas for colleges, canteens, menus, orders, tokens, and payments with RLS policies.
-* [ ] **Milestone 09: Student Mobile App Foundation** — Expo initialization, theme implementation, navigation architecture, and splash experience.
+* [x] **Milestone 07: Shared Package Foundation** — `@quickbite/shared` implemented with Zod 4 domain schemas, enums, and inferred TypeScript types.
+* [x] **Milestone 08: Student Mobile App Foundation & Native Android Build** — Expo SDK 58 initialized; React Native 0.88.1 configured; TypeScript configured; npm workspaces integration completed; `@quickbite/shared` connected; application identity configured (`QuickBite`, `quickbite-student`, scheme `quickbite`, Android package `com.quickbite.student`); 20/20 Expo Doctor checks passed; Android SDK 37, JDK 17, CMake 3.31.6, Ninja 1.12.1 configured; Windows long-path issue resolved; native Android development build compiled via Expo Continuous Native Generation (CNG) and successfully installed and launched on the Android Studio emulator (Current).
+* [ ] **Milestone 09: Database Modeling & Supabase Migrations** — Schemas for colleges, canteens, menus, orders, tokens, and payments with RLS policies.
 * [ ] **Milestone 10: Authentication & OCR College ID Scanner** — Supabase Auth, OTP workflows, and camera-based student ID extraction.
 * [ ] **Milestone 11: Discovery, Menu, & Cart Workflows** — Real-time menu browsing, filtering, and animated cart drawer.
 * [ ] **Milestone 12: UPI Payment Integration & Token Dispatch** — Deep-link settlement and animated digital pickup token generation.
@@ -154,11 +154,19 @@ Root-level npm scripts allow orchestrating common tasks across workspaces using 
 ## 9. Current Development Status
 
 > [!NOTE]
-> **Current Status: MILESTONE 07 — SHARED PACKAGE FOUNDATION (COMPLETED)**
+> **Current Status: MILESTONE 08 — STUDENT MOBILE APP FOUNDATION & NATIVE ANDROID BUILD (COMPLETED)**
 >
-> * **Codebase State:** The shared package `@quickbite/shared` is implemented in `packages/shared/` with Zod 4 domain schemas and inferred types, linked into npm workspaces.
-> * **Planned Implementations:** The student application, business dashboard, and Supabase database schemas are **PLANNED** and undergoing phased implementation. No application UI code or Expo project has been initialized yet.
-> * **Next Milestone:** Milestone 08 — Database Modeling & Supabase Migrations.
+> * **Framework & Runtime:** Expo SDK 58 (`~58.0.23`), React Native 0.88.1, React 19.3.0, TypeScript, Expo Router (file-based routing with `src/app/` convention).
+> * **Monorepo Integration:** Seamlessly integrated into npm workspaces; `@quickbite/shared` connected and consumed.
+> * **Diagnostics & Quality:** Passed 20/20 checks on `npx expo-doctor` with zero errors or warnings.
+> * **Native Android Toolchain:** Android SDK 37, JDK 17, CMake 3.31.6, and Ninja 1.12.1 configured. Windows filesystem long-path limitations resolved.
+> * **Native Development Build:** Compiled successfully via Expo Continuous Native Generation (CNG / `expo run:android`). Successfully installed and launched on the **Android Studio emulator**.
+> * **Environment Distinction:**
+>   - *Expo Go Testing:* Early preview verified on physical Android device via Expo Go container.
+>   - *Native Development Build:* Full native compilation (`com.quickbite.student`) verified on the **Android Studio emulator**.
+>   - *Constraints:* No physical-device native installation claimed; no production APK/AAB readiness claimed (release signing, minification, and Google Play Store publishing are deferred to production hardening).
+> * **Application Identity:** Official identity configured in `apps/student-app/app.json`: `name: QuickBite`, `slug: quickbite-student`, `scheme: quickbite`, `orientation: portrait`, `userInterfaceStyle: light`, Android `package: com.quickbite.student` (provisional — uniqueness must be verified on Google Play Console before production publishing).
+> * **Next Milestone:** Milestone 09 — Database Modeling & Supabase Migrations.
 
 ---
 

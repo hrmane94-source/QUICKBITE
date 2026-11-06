@@ -1,6 +1,6 @@
 # QuickBite — Development Log
 
-> **Current Milestone:** Milestone 07 — Shared Package Foundation  
+> **Current Milestone:** Milestone 08 — Student Mobile App Foundation & Native Android Build  
 > **Repository:** `QUICKBITE/`  
 > **Last Updated:** 2026-11-06  
 
@@ -17,8 +17,8 @@
 | **05** | Workspace Governance & Review | Quality review of project specifications and structure | ✅ Completed | 2026-11-06 |
 | **06** | Monorepo Configuration | Root `package.json`, npm workspaces, `tsconfig.base.json`, `.editorconfig` | ✅ Completed | 2026-11-06 |
 | **07** | Shared Package Foundation | `@quickbite/shared`, Zod 4 domain schemas, enums, inferred types | ✅ Completed | 2026-11-06 |
-| **08** | Database Architecture & Migrations | Supabase PostgreSQL schema, RLS policies, seed fixtures | 🟡 Planned | — |
-| **09** | Student App Foundation | React Native / Expo initialization, base themes & navigation | 🟡 Planned | — |
+| **08** | Student Mobile App Foundation & Native Android Build | Expo SDK 58, React Native 0.88.1, toolchain (SDK 37, JDK 17, CMake, Ninja), 20/20 Expo Doctor checks, native build on Android Studio emulator | ✅ Completed | 2026-11-06 |
+| **09** | Database Architecture & Migrations | Supabase PostgreSQL schema, RLS policies, seed fixtures | 🟡 Planned | — |
 | **10** | Authentication & OCR ID Scanner | Mobile/Email OTP login, camera ID OCR scanner integration | 🟡 Planned | — |
 | **11** | Menu Discovery & Smart Cart | Digital menus, stock 86'ing, filtering, cart drawer | 🟡 Planned | — |
 | **12** | UPI Payment & Digital Token Engine | UPI deep-linking, webhook verification, token generation | 🟡 Planned | — |
@@ -138,9 +138,62 @@
   * No new dependencies were introduced. No files outside `packages/shared/src/schemas/order.ts` and `docs/` were modified.
   * No application UI code, Expo initialization, database migrations, or Git operations were executed.
 
+### Milestone 08: Student Mobile App Foundation & Native Android Development Build
+* **Date:** 2026-11-06
+* **Summary:**
+
+  #### 1. Core Framework & Monorepo Integration
+  - **Expo SDK 58 Initialized:** Student application (`apps/student-app`) bootstrapped on Expo SDK 58 (`expo@~58.0.23`) paired with React Native 0.88.1 and React 19.3.0.
+  - **TypeScript Configuration:** Standardized via `apps/student-app/tsconfig.json` extending `@expo/tsconfig.base`, ensuring independent Metro bundler operation while integrating cleanly with root `tsconfig.base.json`.
+  - **npm Workspaces Integration:** Integrated seamlessly into the monorepo root workspace (`apps/*`, `packages/*`), resolving shared dependencies without hoisting friction.
+  - **Shared Domain Layer Connected:** Linked `@quickbite/shared` (`^0.1.0`), providing student app access to unified Zod 4 domain schemas, enums, cross-field validations, and inferred TypeScript types.
+
+  #### 2. Official Application Identity
+  Configured [`apps/student-app/app.json`](file:///c:/Users/Harshad/PROJECTS/QUICKBITE/apps/student-app/app.json) with production-aligned application identity parameters:
+  - `name`: `"QuickBite"` (Application display name)
+  - `slug`: `"quickbite-student"` (Expo project slug)
+  - `scheme`: `"quickbite"` (Deep-linking URL scheme `quickbite://`)
+  - `orientation`: `"portrait"` (Locked to portrait orientation for consistent ordering UX)
+  - `userInterfaceStyle`: `"light"` (Light theme default adhering to QuickBite brand)
+  - `android.package`: `"com.quickbite.student"` (Provisional — uniqueness must be verified on the Google Play Console prior to production store submission)
+
+  #### 3. Diagnostics & Code Quality Verification
+  - Executed `npx expo-doctor` within `apps/student-app`: **passed 20/20 diagnostic checks** with zero errors, warnings, or dependency mismatches.
+  - Fixed an initial Expo Doctor schema validation issue by removing the non-standard `_packageNote` property from `app.json`, preserving the provisional package warning strictly in project documentation.
+
+  #### 4. Native Android Toolchain Configuration
+  Configured the complete native Android development toolchain on Windows:
+  - **Android SDK:** Configured for Android 15 (API Level 37) compile and target SDK with Android Build Tools 35.0.0.
+  - **Java Development Kit:** JDK 17 (Eclipse Temurin / OpenJDK 17) active and aligned with React Native 0.88 and Gradle 9.4.1 requirements.
+  - **Native C++ Build System:** CMake 3.31.6 and Ninja 1.12.1 configured and verified for React Native New Architecture C++ compilation, Reanimated worklets, and native module linkage.
+  - **Windows Long-Path Resolution:** Addressed Windows filesystem MAX_PATH (260 character) limitation by enabling Git `core.longpaths = true` and configuring Gradle/CMake build directories to prevent intermediate path overflow during native compilation.
+
+  #### 5. Native Android Development Build & Emulator Launch
+  - Compiled the native Android development application using **Expo Continuous Native Generation (CNG)** (`expo run:android`).
+  - Native Android binary (`com.quickbite.student`) was successfully generated, assembled via Gradle, installed onto the **Android Studio emulator**, and launched with active Metro dev-server connectivity.
+  - Verified UI rendering, New Architecture C++ worklets, and basic layout lifecycle on the emulator.
+
+  #### 6. Execution Environment & Distribution Boundaries
+  > [!IMPORTANT]
+  > **Crucial Technical Distinctions:**
+  > - **Expo Go Testing (Early Preview):** The student app was previously loaded and confirmed running as an ephemeral JavaScript bundle inside the pre-compiled Expo Go client container on a physical Android device.
+  > - **Native Development Build (Milestone 08):** QuickBite was compiled as a full native Android application (`com.quickbite.student`) incorporating native C++/Java/Kotlin code, verified and launched on the **Android Studio emulator**.
+  > - **Explicit Boundary:** Native build installation was verified on the **Android Studio emulator**; no physical-device native installation is claimed for the native build.
+  > - **Production Readiness:** This milestone verifies a **debug development build**; no production APK/AAB readiness is claimed. Production signing, ProGuard/R8 minification, and Google Play Store distribution are deferred to Milestone 15.
+
+  #### 7. Version Control Hygiene (Expo CNG .gitignore)
+  Because QuickBite utilizes Expo Continuous Native Generation (where native directories are ephemeral and reproducible from `app.json` + config plugins):
+  - Updated monorepo root [`.gitignore`](file:///c:/Users/Harshad/PROJECTS/QUICKBITE/.gitignore) to exclude generated `android/`, `ios/`, `apps/student-app/android/`, `apps/student-app/ios/`, and native caches (`.gradle/`, `.kotlin/`, `.cxx/`, `local.properties`, `*.keystore`).
+  - Updated [`apps/student-app/.gitignore`](file:///c:/Users/Harshad/PROJECTS/QUICKBITE/apps/student-app/.gitignore) to ensure `/android/`, `/ios/`, `.gradle/`, `.cxx/`, `local.properties`, and keystores remain untracked.
+  - Preserved all source code, assets, scripts, and configuration intact.
+
+  #### 8. Application Structure Catalogued (Baseline Preserved)
+  - Starter screens (`src/app/index.tsx`, `src/app/explore.tsx`) and layout (`src/app/_layout.tsx`) were preserved as the stable baseline.
+  - No application UI screens were modified or removed prematurely.
+
 ---
 
 ## 3. Work In Progress & Next Steps
 
-* **Current Status:** Milestone 07 complete including audit-identified validation corrections. Awaiting manual review before GitHub commit.
-* **Immediate Next Action:** Initiate Milestone 08 — Database Modeling & Supabase Migrations.
+* **Current Status:** Milestone 08 complete. Student mobile application foundation established, native Android development build compiled via Expo CNG, passed 20/20 Expo Doctor checks, and verified on the Android Studio emulator.
+* **Immediate Next Action:** Initiate Milestone 09 — Database Modeling & Supabase Migrations (schemas for colleges, canteens, menus, orders, tokens, and payments with RLS policies).

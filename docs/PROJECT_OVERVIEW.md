@@ -1,7 +1,7 @@
 # QuickBite — Project Overview
 
-> **Version:** 1.0.0  
-> **Milestone:** 03 — Official Project Documentation  
+> **Version:** 1.2.0  
+> **Milestone:** 08 — Student Mobile App Foundation & Native Android Build  
 > **Target Region:** Colleges & Universities across Maharashtra, India  
 
 ---
@@ -127,8 +127,9 @@ flowchart LR
 
 | Stage | Status | Notes |
 | :--- | :--- | :--- |
-| **Workspace & Structure** | **Complete** | Standardized monorepo layout configured with npm workspaces. |
+| **Workspace & Structure** | **Complete** | Standardized monorepo layout configured with npm workspaces (`apps/*`, `packages/*`). |
 | **Official Documentation** | **Complete** | Specs, PRD, Architecture, Design System, ADRs, Log. |
 | **Monorepo Configuration** | **Complete** | Root `package.json`, `tsconfig.base.json`, `.editorconfig`. |
 | **Shared Package Foundation** | **Complete** | `@quickbite/shared` implemented with Zod 4 domain schemas and inferred types. |
-| **Application Development** | **Planned (Pending)** | Scaffolding scheduled for Milestone 08+. |
+| **Student Mobile App Foundation** | **Complete** | Expo SDK 58, React Native 0.88.1, TypeScript, npm workspaces integration, 20/20 Expo Doctor checks, native Android development build (Expo CNG) verified on Android Studio emulator. |
+| **Database & Business Dashboard** | **Planned** | Supabase database migrations and business dashboard web app scheduled for Milestone 09+. |

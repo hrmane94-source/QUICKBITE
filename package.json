@@ -8,12 +8,17 @@
     "packages/*"
   ],
   "engines": {
-    "node": ">=20.0.0",
+    "node": ">=24.0.0",
     "npm": ">=10.0.0"
   },
   "scripts": {
     "typecheck": "npm run --workspaces --if-present typecheck",
     "lint": "npm run --workspaces --if-present lint",
     "test": "npm run --workspaces --if-present test"
+  },
+  "dependencies": {
+    "expo": "~58.0.23",
+    "react": "19.3.0",
+    "react-native": "0.88.1"
   }
 }
