@@ -89,7 +89,7 @@ QUICKBITE/
 │   ├── student-app/          # [PLANNED] Mobile client for Android & iOS (React Native + Expo)
 │   └── business-dashboard/   # [PLANNED] Web SPA for canteen operators (React + TypeScript)
 ├── packages/
-│   └── shared/               # [PLANNED] Shared domain models, contracts, DTOs, schemas
+│   └── shared/               # [IMPLEMENTED] @quickbite/shared (Zod 4 schemas, enums, & inferred types)
 ├── supabase/
 │   ├── migrations/           # [PLANNED] Versioned SQL migrations (RLS, schema, triggers)
 │   ├── functions/            # [PLANNED] Serverless Edge Functions (Deno / TypeScript)
@@ -100,15 +100,15 @@ QUICKBITE/
 
 ### 2.3. Workspace Boundaries & Responsibilities
 
-| Workspace / Directory | Target Technology | Scope & Planned Responsibilities | Dependencies & Architectural Boundaries |
+| Workspace / Directory | Target Technology | Scope & Responsibilities | Dependencies & Architectural Boundaries |
 | :--- | :--- | :--- | :--- |
-| **`apps/student-app`** | React Native, Expo, TypeScript | Student consumer app: OTP authentication, OCR ID scanning, menu discovery, cart, UPI payments, live digital token tracking. | Consumes `packages/shared`. Never imports dashboard code. Retains Expo's dedicated `tsconfig.json`. |
-| **`apps/business-dashboard`** | React, TypeScript (Vite) | Kitchen & admin portal: Live Kitchen Display System (KDS), menu availability toggling, sales analytics. | Consumes `packages/shared`. Never imports mobile app code. |
-| **`packages/shared`** | Platform-agnostic TypeScript | Domain interfaces, order status enums, Zod validation schemas, business constants, currency formatters. | Zero UI or framework dependencies (no React or React Native dependencies). Extends `tsconfig.base.json`. |
-| **`supabase/`** | PostgreSQL 15+, Deno | Cloud backend: SQL DDL migrations, Row Level Security (RLS) rules, seed fixtures, and Deno Edge Functions. | Decoupled from the Node.js workspace hierarchy; managed via Supabase CLI and SQL tooling. |
+| **`apps/student-app`** | React Native, Expo, TypeScript | [PLANNED] Student consumer app: OTP authentication, OCR ID scanning, menu discovery, cart, UPI payments, live digital token tracking. | Consumes `@quickbite/shared`. Never imports dashboard code. Retains Expo's dedicated `tsconfig.json`. |
+| **`apps/business-dashboard`** | React, TypeScript (Vite) | [PLANNED] Kitchen & admin portal: Live Kitchen Display System (KDS), menu availability toggling, sales analytics. | Consumes `@quickbite/shared`. Never imports mobile app code. |
+| **`packages/shared`** | TypeScript + Zod 4 | [IMPLEMENTED] Domain interfaces, order status enums, Zod validation schemas, business constants, currency formatters. | Zero UI or framework dependencies. Extends `tsconfig.base.json`. Consumed directly via npm workspace linking. |
+| **`supabase/`** | PostgreSQL 15+, Deno | [PLANNED] Cloud backend: SQL DDL migrations, Row Level Security (RLS) rules, seed fixtures, and Deno Edge Functions. | Decoupled from the Node.js workspace hierarchy; managed via Supabase CLI and SQL tooling. |
 
 > [!NOTE]
-> *Implementation Status:* The workspace structure and monorepo configuration are established. The application source code for `student-app`, `business-dashboard`, and `shared` will be developed during upcoming milestones according to the roadmap.
+> *Implementation Status:* The shared package `@quickbite/shared` is implemented and linked via npm workspaces. The application source code for `student-app`, `business-dashboard`, and `supabase/` database migrations remain planned for upcoming milestones.
 
 ### 2.4. Monorepo Development Workflow
 The root workspace provides unified orchestration scripts executing recursively across available packages using npm's `--workspaces --if-present` flags:
@@ -123,6 +123,77 @@ The root `tsconfig.base.json` provides a shared configuration for Node/TypeScrip
 * **Type Safety:** `"strict": true`, `"forceConsistentCasingInFileNames": true`, `"skipLibCheck": true`.
 * **Zero Overhead:** `"noEmit": true` preventing unintended code generation at the root level.
 * **Expo Independence:** The student mobile app in `apps/student-app` is intentionally not bound to this base configuration; it will extend Expo's official `@expo/tsconfig.base` upon app scaffolding to guarantee seamless Metro bundler integration.
+
+### 2.6. Shared Package Architecture (`@quickbite/shared`)
+
+#### Purpose
+`@quickbite/shared` is a source-first, framework-agnostic TypeScript package that acts as the single source of truth for all domain entities, validation rules, enums, and data transfer objects (DTOs) across the QuickBite monorepo.
+
+#### Why Zod 4 is Used
+* **Unified Schema & Type Definition:** Eliminates duplication by defining validation logic once and inferring static TypeScript types via `z.infer`.
+* **Runtime Boundary Safety:** Provides foolproof parsing and validation at network boundaries (REST requests, WebSocket messages, client form submissions).
+* **Zero Client Framework Binding:** Operates cleanly in React Native (Expo Metro), React Web (Vite), and serverless Edge Functions (Deno).
+* **Lightweight & Fast:** Zod 4 delivers a streamlined footprint with near-zero runtime overhead when schemas are parsed.
+
+#### Domain Schema Organisation
+```text
+packages/shared/src/
+├── index.ts                  # Public package entry point
+├── schemas/
+│   ├── index.ts              # Schema barrel export
+│   ├── common.ts             # UUIDs, ISO timestamps, currency, domain enums
+│   ├── college.ts            # College entity, create & update schemas
+│   ├── canteen.ts            # Canteen entity, create & update schemas
+│   ├── student.ts            # Student profile schema (privacy-compliant)
+│   ├── menu-item.ts          # Menu item catalog schemas (prices in integer paise)
+│   ├── order.ts              # Order and OrderItem schemas, cross-field refinements, totals
+│   ├── token.ts              # Digital token number and status schemas
+│   └── payment.ts            # Payment record and status schemas
+└── types/
+    └── index.ts              # Inferred TypeScript types via z.infer
+```
+
+#### Cross-Field Validation Refinements (Milestone 07 — Audit Resolution)
+`order.ts` enforces two critical cross-field invariants using Zod `.refine()`:
+
+1. **Order Item Total Integrity** — Ensures `totalPricePaise === quantity × unitPricePaise` for every line item. Prevents mismatched price snapshots from reaching the checkout stage:
+```typescript
+orderItemSchema.refine(
+  (item) => item.totalPricePaise === item.quantity * item.unitPricePaise,
+  { message: 'totalPricePaise must equal quantity multiplied by unitPricePaise', path: ['totalPricePaise'] }
+)
+```
+
+2. **Order Subtotal Integrity** — Ensures `subtotalPaise === sum(items[].totalPricePaise)`. Guards against subtotal drift across line-item additions or server-side mutations:
+```typescript
+orderSchema.refine(
+  (order) => order.subtotalPaise === order.items.reduce((sum, item) => sum + item.totalPricePaise, 0),
+  { message: 'subtotalPaise must equal the sum of all item totalPricePaise values', path: ['subtotalPaise'] }
+)
+```
+
+> [!NOTE]
+> `totalPaise` is intentionally preserved alongside `subtotalPaise` to accommodate future checkout breakdowns (e.g. convenience fees, packaging charges, applied discounts, GST). These breakdown fields will be introduced during payment workflow implementation (planned Milestone 11/12). The divergence between `subtotalPaise` and `totalPaise` is not validated at this stage.
+
+#### Application Consumption Pattern
+Both consumer and business applications consume shared definitions directly via the workspace alias:
+```typescript
+import {
+  orderSchema,
+  type Order,
+  type OrderStatus,
+  orderStatusSchema,
+  createOrderInputSchema,
+} from '@quickbite/shared';
+
+// Parse incoming WebSocket or REST payload — includes cross-field refinements
+const validatedOrder: Order = orderSchema.parse(rawPayload);
+```
+
+#### Distinction: Shared Schemas vs. Supabase Database Validation
+It is critical to distinguish application-layer validation from future database-layer enforcement:
+1. **`@quickbite/shared` (Application Layer):** Validates user input before network transmission and verifies API responses at runtime within the client apps. Enforces business formats (regex for Indian phone numbers, character lengths, integer paise currency), and cross-field arithmetic invariants (item total, subtotal sum).
+2. **Supabase / PostgreSQL (Database Layer - Upcoming):** Enforces relational referential integrity (`FOREIGN KEY`), transactional isolation, check constraints (e.g. `CHECK (total_paise >= 0)`), Row Level Security (RLS) policies, and immutable audit triggers. Shared schemas do not replace database constraints; they complement them by catching malformed data at the client perimeter before it reaches the database.
 
 ---
 

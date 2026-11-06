@@ -114,6 +114,7 @@ QuickBite is an end-to-end digital ordering, queue optimization, and kitchen man
 
 | Module | Feature | Implementation Status | Target Milestone |
 | :--- | :--- | :--- | :--- |
+| **Domain Schemas** | Shared Zod Schemas & Inferred Types | ✅ Implemented | Milestone 07 |
 | **Auth** | Mobile / Email OTP | 🟡 Planned | Milestone 10 |
 | **Auth** | College ID OCR Scanner | 🟡 Planned | Milestone 10 |
 | **Discovery** | Campus & Canteen Selector | 🟡 Planned | Milestone 11 |

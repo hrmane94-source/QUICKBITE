@@ -1,7 +1,7 @@
 # QuickBite — Architectural Decision Records (ADRs)
 
-> **Document Version:** 1.1.0  
-> **Milestone:** 06 — Monorepo Configuration  
+> **Document Version:** 1.2.0  
+> **Milestone:** 07 — Shared Package Foundation  
 > **Status:** Active & Accepted  
 
 ---
@@ -17,6 +17,7 @@
 * [ADR-007: On-Device & Edge Function OCR for College ID Extraction](#adr-007-on-device--edge-function-ocr-for-college-id-extraction)
 * [ADR-008: Deterministic Finite State Machine for Digital Pickup Tokens](#adr-008-deterministic-finite-state-machine-for-digital-pickup-tokens)
 * [ADR-009: Native npm Workspaces & Shared TypeScript Baseline](#adr-009-native-npm-workspaces--shared-typescript-baseline)
+* [ADR-010: Shared Domain Validation & Type Inference with Zod 4](#adr-010-shared-domain-validation--type-inference-with-zod-4)
 
 ---
 
@@ -120,3 +121,19 @@
 * **Consequences:**
   * *Pros:* Zero external tooling overhead; built-in dependency symlinking; zero lock-in to proprietary monorepo frameworks; unified CI command surface; preserves full compatibility with Expo Metro bundler.
   * *Cons:* Package dependency hoisting requires careful scoping during dependency installation in future milestones; tasks are run sequentially unless parallel flags are passed.
+
+---
+
+### ADR-010: Shared Domain Validation & Type Inference with Zod 4
+
+* **Context:** QuickBite operates across multiple consumer and operational surfaces (React Native student mobile app, React kitchen dashboard, and Supabase Edge Functions). Maintaining duplicated TypeScript interfaces and ad-hoc runtime validators across separate codebases risks contract drift, subtle type bugs, and silent runtime failures at network boundaries. Furthermore, monetary calculations in Indian Rupees are prone to floating-point precision loss if not standardized.
+* **Decision:**
+  1. Build `@quickbite/shared` as a source-first TypeScript package powered by **Zod 4**.
+  2. Define authoritative runtime schemas for all domain aggregates: Common primitives, College, Canteen, Student Profile, Menu Item, Order, Token, and Payment.
+  3. Derive all static TypeScript types strictly from schemas using `z.infer<typeof schema>`, establishing a single source of truth.
+  4. Standardize all financial amounts strictly in **integer paise** (e.g. 5000 paise = ₹50.00), strictly prohibiting IEEE-754 floating-point currency representation.
+  5. Privacy Guardrails: Explicitly forbid storing government identity numbers or identity document image binaries/URLs within the Student Profile schema.
+  6. Architecture Layering: Clarify that `@quickbite/shared` schemas govern perimeter client validation and API serialization; they complement, but do not replace, upcoming PostgreSQL DDL constraints, check triggers, and Row Level Security (RLS) policies in the database.
+* **Consequences:**
+  * *Pros:* Zero contract drift between mobile client, web dashboard, and backend; runtime payload validation prevents corrupted states from reaching storage; eliminates floating-point rounding errors; source-first layout requires no precompilation step for Expo Metro or Vite bundlers.
+  * *Cons:* Adds Zod 4 as a shared runtime dependency across consumer applications; schema breaking changes require synchronized updates across workspace consumers.
