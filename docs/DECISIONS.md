@@ -1,7 +1,7 @@
 # QuickBite — Architectural Decision Records (ADRs)
 
-> **Document Version:** 1.0.0  
-> **Milestone:** 03 — Official Project Documentation  
+> **Document Version:** 1.1.0  
+> **Milestone:** 06 — Monorepo Configuration  
 > **Status:** Active & Accepted  
 
 ---
@@ -16,6 +16,7 @@
 * [ADR-006: UPI Deep-Linking with Asynchronous Webhook Verification](#adr-006-upi-deep-linking-with-asynchronous-webhook-verification)
 * [ADR-007: On-Device & Edge Function OCR for College ID Extraction](#adr-007-on-device--edge-function-ocr-for-college-id-extraction)
 * [ADR-008: Deterministic Finite State Machine for Digital Pickup Tokens](#adr-008-deterministic-finite-state-machine-for-digital-pickup-tokens)
+* [ADR-009: Native npm Workspaces & Shared TypeScript Baseline](#adr-009-native-npm-workspaces--shared-typescript-baseline)
 
 ---
 
@@ -104,3 +105,18 @@
 * **Consequences:**
   * *Pros:* Impossible to bypass preparation steps; single-use QR scan prevents double redemption; real-time database triggers automatically notify students at the precise moment of readiness.
   * *Cons:* Requires kitchen staff to reliably tap status buttons on their counter terminal.
+
+---
+
+### ADR-009: Native npm Workspaces & Shared TypeScript Baseline
+
+* **Context:** QuickBite requires managing multiple related packages (mobile app, web dashboard, shared logic) with clear separation of concerns, rapid local package linking, and shared quality checks. We evaluated native npm workspaces versus third-party monorepo orchestrators (Turborepo, Nx, Lerna). In addition, TypeScript configuration must balance shared strict rules with Expo's specialized React Native configuration.
+* **Decision:**
+  1. Adopt **native npm workspaces** configured in root `package.json` with workspace patterns `apps/*` and `packages/*`, requiring Node.js `>=20.0.0` and npm `>=10.0.0`.
+  2. Implement unified task runner scripts at the root level using `--workspaces --if-present` for `typecheck`, `lint`, and `test`.
+  3. Create `tsconfig.base.json` with strict type checking, `ES2022` target, `bundler` module resolution, and `noEmit: true` to serve as the baseline for internal shared packages (`packages/shared`).
+  4. Explicitly allow `apps/student-app` to retain Expo's recommended `@expo/tsconfig.base` upon app scaffolding rather than forcing root `tsconfig.base.json` inheritance.
+  5. Standardize whitespace and character encoding via root `.editorconfig`.
+* **Consequences:**
+  * *Pros:* Zero external tooling overhead; built-in dependency symlinking; zero lock-in to proprietary monorepo frameworks; unified CI command surface; preserves full compatibility with Expo Metro bundler.
+  * *Cons:* Package dependency hoisting requires careful scoping during dependency installation in future milestones; tasks are run sequentially unless parallel flags are passed.

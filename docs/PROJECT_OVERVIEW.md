@@ -127,6 +127,7 @@ flowchart LR
 
 | Stage | Status | Notes |
 | :--- | :--- | :--- |
-| **Workspace & Structure** | **Complete** | Standardized monorepo layout configured. |
+| **Workspace & Structure** | **Complete** | Standardized monorepo layout configured with npm workspaces. |
 | **Official Documentation** | **Complete** | Specs, PRD, Architecture, Design System, ADRs, Log. |
-| **Application Development** | **Planned (Pending)** | Scaffolding scheduled for Milestone 04+. |
+| **Monorepo Configuration** | **Complete** | Root `package.json`, `tsconfig.base.json`, `.editorconfig`. |
+| **Application Development** | **Planned (Pending)** | Scaffolding scheduled for Milestone 07+. |

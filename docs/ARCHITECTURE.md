@@ -53,34 +53,76 @@ graph TD
 
 ---
 
-## 2. Monorepo Organization & Code Boundaries
+## 2. Monorepo Organization & npm Workspaces Architecture
 
-The codebase is organized into isolated, reusable workspaces under the root project directory:
+### 2.1. Rationale: Why QuickBite Uses a Monorepo
+QuickBite is an interconnected ecosystem comprising a cross-platform consumer mobile app, a kitchen operator dashboard, shared domain logic, and a cloud-native database backend. A monorepo configuration delivers distinct operational advantages:
+1. **Single Source of Truth for Domain Contracts:** Eliminates data drift between the student ordering frontend and the kitchen management backend by sharing Zod schemas, TypeScript interfaces, and order state definitions directly from `packages/shared`.
+2. **Atomic Schema Evolution:** When a database migration alters order or menu schemas, both client applications and shared types are updated in a single atomic commit, eliminating version mismatches.
+3. **Consolidated Tooling & Standards:** Enforces uniform formatting via `.editorconfig`, unified TypeScript baseline rules via `tsconfig.base.json`, and centralized CI/CD scripts without managing independent package registries or private npm feeds.
+
+### 2.2. npm Workspaces Configuration
+The root repository is configured as an npm workspaces monorepo via `package.json` (`name: "quickbite-workspace"`):
+
+```json
+{
+  "name": "quickbite-workspace",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  }
+}
+```
 
 ```text
 QUICKBITE/
+├── package.json              # Monorepo root manifest (npm workspaces definition)
+├── tsconfig.base.json        # Shared baseline TypeScript compiler options
+├── .editorconfig             # Universal cross-editor formatting specifications
 ├── apps/
-│   ├── student-app/          # Mobile client for iOS and Android
-│   └── business-dashboard/   # Web SPA for canteen operators and managers
+│   ├── student-app/          # [PLANNED] Mobile client for Android & iOS (React Native + Expo)
+│   └── business-dashboard/   # [PLANNED] Web SPA for canteen operators (React + TypeScript)
 ├── packages/
-│   └── shared/               # Shared domain models, contracts, DTOs, schemas
+│   └── shared/               # [PLANNED] Shared domain models, contracts, DTOs, schemas
 ├── supabase/
-│   ├── migrations/           # Versioned, reproducible SQL migrations
-│   ├── functions/            # Serverless Edge Functions
-│   └── seed/                 # Development datasets (campuses, menus)
-├── docs/                     # Specifications and architectural documentation
+│   ├── migrations/           # [PLANNED] Versioned SQL migrations (RLS, schema, triggers)
+│   ├── functions/            # [PLANNED] Serverless Edge Functions (Deno / TypeScript)
+│   └── seed/                 # [PLANNED] Development seed datasets (campuses, menus)
+├── docs/                     # Architectural, product, and design specifications
 └── design/                   # Brand tokens, UI references, and exports
 ```
 
-### Module Boundaries & Responsibilities
+### 2.3. Workspace Boundaries & Responsibilities
 
-| Directory | Scope | Dependencies & Restrictions |
-| :--- | :--- | :--- |
-| `apps/student-app` | React Native (Expo) consumer application | Imports from `packages/shared`. Never imports dashboard code. |
-| `apps/business-dashboard` | React web application for kitchen operations | Imports from `packages/shared`. Never imports mobile app code. |
-| `packages/shared` | Platform-agnostic TypeScript | Zero client dependencies (no React or React Native dependencies). Contains Zod schemas, interfaces, shared constants. |
-| `supabase/migrations` | Pure SQL (PostgreSQL DDL/DML) | Versioned, idempotent schema migrations and RLS policies. |
-| `supabase/functions` | Deno runtime Edge Functions | Executes sensitive business operations (UPI callbacks, OCR data handling). |
+| Workspace / Directory | Target Technology | Scope & Planned Responsibilities | Dependencies & Architectural Boundaries |
+| :--- | :--- | :--- | :--- |
+| **`apps/student-app`** | React Native, Expo, TypeScript | Student consumer app: OTP authentication, OCR ID scanning, menu discovery, cart, UPI payments, live digital token tracking. | Consumes `packages/shared`. Never imports dashboard code. Retains Expo's dedicated `tsconfig.json`. |
+| **`apps/business-dashboard`** | React, TypeScript (Vite) | Kitchen & admin portal: Live Kitchen Display System (KDS), menu availability toggling, sales analytics. | Consumes `packages/shared`. Never imports mobile app code. |
+| **`packages/shared`** | Platform-agnostic TypeScript | Domain interfaces, order status enums, Zod validation schemas, business constants, currency formatters. | Zero UI or framework dependencies (no React or React Native dependencies). Extends `tsconfig.base.json`. |
+| **`supabase/`** | PostgreSQL 15+, Deno | Cloud backend: SQL DDL migrations, Row Level Security (RLS) rules, seed fixtures, and Deno Edge Functions. | Decoupled from the Node.js workspace hierarchy; managed via Supabase CLI and SQL tooling. |
+
+> [!NOTE]
+> *Implementation Status:* The workspace structure and monorepo configuration are established. The application source code for `student-app`, `business-dashboard`, and `shared` will be developed during upcoming milestones according to the roadmap.
+
+### 2.4. Monorepo Development Workflow
+The root workspace provides unified orchestration scripts executing recursively across available packages using npm's `--workspaces --if-present` flags:
+* **`npm run typecheck`**: Executes type checking across all workspace packages defining a `typecheck` script without failing on packages that omit it.
+* **`npm run lint`**: Executes static code linting across all workspace packages defining a `lint` script.
+* **`npm run test`**: Runs unit and integration test runners across all workspace packages defining a `test` script.
+
+### 2.5. Baseline TypeScript Architecture (`tsconfig.base.json`)
+The root `tsconfig.base.json` provides a shared configuration for Node/TypeScript packages (such as `packages/shared`):
+* **Target & Library:** `ES2022` target with modern ECMAScript feature support.
+* **Module Resolution:** `module: "ESNext"` paired with `"moduleResolution": "bundler"` for modern packaging and bundler compatibility.
+* **Type Safety:** `"strict": true`, `"forceConsistentCasingInFileNames": true`, `"skipLibCheck": true`.
+* **Zero Overhead:** `"noEmit": true` preventing unintended code generation at the root level.
+* **Expo Independence:** The student mobile app in `apps/student-app` is intentionally not bound to this base configuration; it will extend Expo's official `@expo/tsconfig.base` upon app scaffolding to guarantee seamless Metro bundler integration.
 
 ---
 

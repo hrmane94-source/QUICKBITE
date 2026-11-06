@@ -1,0 +1,19 @@
+{
+  "name": "quickbite-workspace",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Monorepo workspace for QuickBite — Smart Canteen Ordering & Queue Management Platform",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  },
+  "scripts": {
+    "typecheck": "npm run --workspaces --if-present typecheck",
+    "lint": "npm run --workspaces --if-present lint",
+    "test": "npm run --workspaces --if-present test"
+  }
+}

@@ -114,13 +114,13 @@ QuickBite is an end-to-end digital ordering, queue optimization, and kitchen man
 
 | Module | Feature | Implementation Status | Target Milestone |
 | :--- | :--- | :--- | :--- |
-| **Auth** | Mobile / Email OTP | 🟡 Planned | Milestone 07 |
-| **Auth** | College ID OCR Scanner | 🟡 Planned | Milestone 07 |
-| **Discovery** | Campus & Canteen Selector | 🟡 Planned | Milestone 08 |
-| **Catalog** | Digital Menu & Search | 🟡 Planned | Milestone 08 |
-| **Checkout** | Cart & Advance Ordering | 🟡 Planned | Milestone 08 |
-| **Payments** | UPI Deep Linking & Settlement | 🟡 Planned | Milestone 09 |
-| **Queue** | Digital Token Generation | 🟡 Planned | Milestone 09 |
-| **Queue** | Real-time KDS & Live Tracking | 🟡 Planned | Milestone 10–11 |
-| **Business** | Menu Management & Stock 86'ing | 🟡 Planned | Milestone 10 |
-| **Business** | Analytics & Sales Reporting | 🟡 Planned | Milestone 10 |
+| **Auth** | Mobile / Email OTP | 🟡 Planned | Milestone 10 |
+| **Auth** | College ID OCR Scanner | 🟡 Planned | Milestone 10 |
+| **Discovery** | Campus & Canteen Selector | 🟡 Planned | Milestone 11 |
+| **Catalog** | Digital Menu & Search | 🟡 Planned | Milestone 11 |
+| **Checkout** | Cart & Advance Ordering | 🟡 Planned | Milestone 11 |
+| **Payments** | UPI Deep Linking & Settlement | 🟡 Planned | Milestone 12 |
+| **Queue** | Digital Token Generation | 🟡 Planned | Milestone 12 |
+| **Queue** | Real-time KDS & Live Tracking | 🟡 Planned | Milestone 13–14 |
+| **Business** | Menu Management & Stock 86'ing | 🟡 Planned | Milestone 13 |
+| **Business** | Analytics & Sales Reporting | 🟡 Planned | Milestone 13 |
